@@ -5,3 +5,126 @@
     @apply antialiased text-slate-800 bg-slate-50 min-h-screen font-sans;
   }
 }
+
+/* Print Stylesheet for Report PDF Export */
+@media print {
+  @page {
+    margin: 8mm 10mm;
+    size: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-sizing: border-box !important;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Reset main wrappers so they don't stretch or push trailing empty pages */
+  #root,
+  main,
+  div[class*="min-h-screen"] {
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Completely eliminate horizontal overflow, clipping and scrollbars in print */
+  html, body, main, div, table {
+    overflow: visible !important;
+    max-width: 100% !important;
+  }
+
+  .overflow-x-auto,
+  div[class*="overflow-x"] {
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  th, td {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Completely strip hidden elements so they leave zero phantom height or margins */
+  .no-print,
+  .print\:hidden,
+  header.sticky,
+  footer {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:table {
+    display: table !important;
+  }
+
+  .print\:static {
+    position: static !important;
+  }
+
+  /* Compact section spacing in print to avoid huge lower gaps */
+  .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem !important;
+  }
+
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.75rem !important;
+  }
+
+  /* Controlled page breaks: Avoid breaking small elements, but allow large card containers to flow */
+  tr,
+  li,
+  .break-inside-avoid,
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Allow big section containers to paginate naturally instead of leaving massive lower-page gaps */
+  .space-y-8 > div:not(.break-inside-avoid) {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Avoid page breaks right after section headings */
+  h1, h2, h3, h4 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Remove screen shadows in print for clean vector borders */
+  .shadow-sm,
+  .shadow-xs,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-2xs {
+    box-shadow: none !important;
+  }
+}
+

@@ -1,19 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { 
   Flame, Droplets, Wheat, ShieldCheck, 
   HelpCircle, RefreshCw, Sparkles, Scale,
-  Pill, Activity, Percent, Target, Heart,
-  CheckCircle2, Ruler, BookOpen, Utensils,
-  Lightbulb, Compass, Coffee, Apple, Check
+  Pill, Activity, Target,
+  Ruler, BookOpen, Utensils,
+  Lightbulb, Apple, Check,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '../utils/cn';
 import BodyFat3DViewer from './BodyFat3DViewer';
-import BodyViewer3D from './BodyViewer3D';
 import { generateSimpleEnglishSummary } from '../utils/plainEnglishGuides';
 import { generateDailyMealChart, EVERYDAY_NUTRIENT_SOURCES } from '../utils/mealPlanGenerator';
 
 export default function ResultsDashboard({ result, onReset }) {
+  const formattedReportDate = useMemo(() => {
+    return new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }, []);
+
   useEffect(() => {
     try {
       confetti({
@@ -21,14 +25,14 @@ export default function ResultsDashboard({ result, onReset }) {
         spread: 60,
         origin: { y: 0.6 }
       });
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, []);
 
   if (!result) return null;
 
-  const { body_status, body_composition, energy, nutrition, inputs, disclaimer, fat_distribution, body_3d } = result;
+  const { body_status, body_composition, energy, nutrition, inputs, disclaimer, fat_distribution } = result;
   const comp = body_composition || {};
   const { bmi, whtr, category, badge, tone, analysis, bmi_category, whtr_category } = body_status;
   const { target: targetCals, maintenance_tdee: tdee, goal_label } = nutrition.calories;
@@ -85,10 +89,47 @@ export default function ResultsDashboard({ result, onReset }) {
 
   const currentTone = toneConfig[tone] || toneConfig.sky;
 
+  const handleDownloadReport = () => {
+    const originalTitle = document.title;
+    const dateStr = new Date().toISOString().split('T')[0];
+    const userLabel = `${inputs.age || 25}y_${inputs.biological_sex || 'profile'}`;
+    document.title = `NutriCheck_Health_Report_${userLabel}_${dateStr}`;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Dedicated Printable Header (Included when downloading/printing report) */}
+      <div className="hidden print:block border-b-2 border-slate-900 pb-5 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-sky-600 flex items-center justify-center text-white font-black text-xl">
+              N
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                Nutri<span className="text-sky-600">Check</span> Health AI Report
+              </h1>
+              <p className="text-xs text-slate-500 font-medium">
+                True Body Composition • Waist-to-Height Precision & Nutritional Targets
+              </p>
+            </div>
+          </div>
+          <div className="text-right text-xs text-slate-600">
+            <p className="font-bold text-slate-900">Assessment Profile</p>
+            <p>{inputs.age}y {inputs.biological_sex} • {inputs.height_cm} cm • {inputs.weight_kg} kg</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Report Date: {formattedReportDate}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Top Banner Card: Body Status & Holistic Evaluation */}
-      <div className={cn("p-6 sm:p-8 rounded-3xl border shadow-sm transition-all", currentTone.bg, currentTone.border)}>
+      <div className={cn("p-6 sm:p-8 print:p-4 print:rounded-2xl rounded-3xl border shadow-sm transition-all", currentTone.bg, currentTone.border)}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/5 pb-6">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
@@ -104,13 +145,22 @@ export default function ResultsDashboard({ result, onReset }) {
             </h1>
           </div>
 
-          <button
-            type="button"
-            onClick={onReset}
-            className="self-start md:self-auto inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" /> Recalculate
-          </button>
+          <div className="flex items-center gap-2.5 self-start md:self-auto print:hidden">
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-sky-600 via-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-500/20 transition-all cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" /> Download Report
+            </button>
+            <button
+              type="button"
+              onClick={onReset}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Recalculate
+            </button>
+          </div>
         </div>
 
         {/* BMI & WHtR Core Metric Tiles */}
@@ -199,7 +249,7 @@ export default function ResultsDashboard({ result, onReset }) {
 
       {/* 1. Plain English Health Summary & Comparison Table */}
       {simpleSummary && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+        <div className="bg-white p-6 sm:p-8 print:p-4 print:space-y-3 print:rounded-2xl rounded-3xl border border-slate-200 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-sky-600" />
@@ -232,36 +282,38 @@ export default function ResultsDashboard({ result, onReset }) {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Health Metrics Comparison Table
             </h3>
-            <div className="overflow-x-auto rounded-2xl border border-slate-200/80 shadow-2xs">
-              <table className="w-full text-left border-collapse">
+            
+            {/* Desktop & Print Table View: 100% Fixed Width, No Horizontal Scrollbar */}
+            <div className="hidden sm:block print:block rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
+              <table className="w-full table-fixed text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">Metric / Measure</th>
-                    <th className="py-3 px-4">Your Measurement</th>
-                    <th className="py-3 px-4">Healthy Target Range</th>
-                    <th className="py-3 px-4">What It Means in Plain English</th>
-                    <th className="py-3 px-4 text-center">Status</th>
+                  <tr className="bg-slate-50 border-b border-slate-200/80 text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th className="py-3 px-3.5 w-[21%]">Metric / Measure</th>
+                    <th className="py-3 px-2.5 w-[13%]">Your Measure</th>
+                    <th className="py-3 px-2.5 w-[16%]">Healthy Target</th>
+                    <th className="py-3 px-3.5 w-[32%]">Plain English Meaning</th>
+                    <th className="py-3 px-2 text-center w-[18%]">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs">
                   {simpleSummary.comparisonRows.map((row, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">
-                        <div>{row.metric}</div>
-                        <div className="text-[10px] text-slate-400 font-normal">{row.plainName}</div>
+                      <td className="py-3.5 px-3.5 font-bold text-slate-900 align-middle">
+                        <div className="leading-snug">{row.metric}</div>
+                        <div className="text-[10px] text-slate-400 font-normal leading-tight mt-0.5">{row.plainName}</div>
                       </td>
-                      <td className="py-3.5 px-4 font-black text-slate-900 whitespace-nowrap">
-                        {row.yourValue}
+                      <td className="py-3.5 px-2.5 font-black text-slate-900 align-middle">
+                        <div className="leading-snug">{row.yourValue}</div>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-medium whitespace-nowrap">
-                        {row.idealTarget}
+                      <td className="py-3.5 px-2.5 text-slate-600 font-medium align-middle">
+                        <div className="leading-snug">{row.idealTarget}</div>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-600 leading-relaxed min-w-[220px]">
+                      <td className="py-3.5 px-3.5 text-slate-600 leading-relaxed text-[11px] align-middle">
                         {row.whatItMeans}
                       </td>
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3.5 px-2 text-center align-middle">
                         <span className={cn(
-                          "px-2.5 py-0.5 rounded-full text-[10px] font-medium border inline-block",
+                          "px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold border inline-block leading-tight text-center max-w-full break-words",
                           row.tone === 'rose' ? "bg-rose-50/80 text-rose-700 border-rose-200/70" :
                           row.tone === 'teal' ? "bg-teal-50/80 text-teal-800 border-teal-200/70" :
                           row.tone === 'amber' ? "bg-amber-50/80 text-amber-800 border-amber-200/70" :
@@ -275,13 +327,49 @@ export default function ResultsDashboard({ result, onReset }) {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards View (Screen only, hidden in print) */}
+            <div className="sm:hidden print:hidden space-y-3">
+              {simpleSummary.comparisonRows.map((row, idx) => (
+                <div key={idx} className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/60 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">{row.metric}</h4>
+                      <p className="text-[10px] text-slate-400">{row.plainName}</p>
+                    </div>
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-semibold border inline-block shrink-0",
+                      row.tone === 'rose' ? "bg-rose-50/80 text-rose-700 border-rose-200/70" :
+                      row.tone === 'teal' ? "bg-teal-50/80 text-teal-800 border-teal-200/70" :
+                      row.tone === 'amber' ? "bg-amber-50/80 text-amber-800 border-amber-200/70" :
+                      "bg-slate-50 text-slate-700 border-slate-200"
+                    )}>
+                      {row.status}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-200/60">
+                    <div>
+                      <span className="text-[10px] font-semibold text-slate-400 block uppercase">Your Value</span>
+                      <span className="font-black text-slate-900">{row.yourValue}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-semibold text-slate-400 block uppercase">Target Range</span>
+                      <span className="text-slate-600 font-medium">{row.idealTarget}</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed bg-white p-2.5 rounded-xl border border-slate-200/60">
+                    {row.whatItMeans}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* 2. Step-by-Step Action Roadmap Tailored to Your Goal */}
       {simpleSummary?.goalGuide && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+        <div className="bg-white p-6 sm:p-8 print:p-4 print:space-y-3 print:rounded-2xl rounded-3xl border border-slate-200 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
             <div>
               <div className="flex items-center gap-2">
@@ -331,7 +419,7 @@ export default function ResultsDashboard({ result, onReset }) {
 
       {/* Whole-Body Fat & Composition Deep Dive */}
       {comp.body_fat_percentage && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+        <div className="bg-white p-6 sm:p-8 print:p-4 print:space-y-3 print:rounded-2xl rounded-3xl border border-slate-200 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
             <div>
               <div className="flex items-center gap-2">
@@ -481,11 +569,13 @@ export default function ResultsDashboard({ result, onReset }) {
         </div>
       )}
 
-      {/* 3D Anatomical Body Model with AI Fat Detection & Red Surface Heatmap */}
-      <BodyFat3DViewer inputs={inputs} fatDistribution={fat_distribution} />
+      {/* 3D Anatomical Body Model with AI Fat Detection (Ignored / excluded in downloaded report) */}
+      <div className="print:hidden">
+        <BodyFat3DViewer inputs={inputs} fatDistribution={fat_distribution} />
+      </div>
 
       {/* Target Calories & Macronutrients Section */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs">
+      <div className="bg-white p-6 sm:p-8 print:p-4 print:rounded-2xl rounded-3xl border border-slate-200 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
           <div>
             <h2 className="text-xl font-bold text-slate-900">
@@ -602,7 +692,7 @@ export default function ResultsDashboard({ result, onReset }) {
 
       {/* 3. Complete Daily Meal Plan with Named Meals & Food Portions */}
       {dailyMeals && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+        <div className="bg-white p-6 sm:p-8 print:p-4 print:space-y-3 print:rounded-2xl rounded-3xl border border-slate-200 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
             <div>
               <div className="flex items-center gap-2">
@@ -666,7 +756,7 @@ export default function ResultsDashboard({ result, onReset }) {
       )}
 
       {/* Priority Micronutrients Gaps & Clinical Rationale */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs">
+      <div className="bg-white p-6 sm:p-8 print:p-4 print:rounded-2xl rounded-3xl border border-slate-200 shadow-xs">
         <div className="border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
             <Pill className="w-5 h-5 text-sky-600" />
@@ -738,7 +828,7 @@ export default function ResultsDashboard({ result, onReset }) {
       </div>
 
       {/* 4. Where to Get Every Key Nutrient from Everyday Grocery Foods */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+      <div className="bg-white p-6 sm:p-8 print:p-4 print:space-y-3 print:rounded-2xl rounded-3xl border border-slate-200 shadow-xs space-y-6">
         <div className="border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
             <Apple className="w-5 h-5 text-amber-600" />
@@ -788,8 +878,36 @@ export default function ResultsDashboard({ result, onReset }) {
         </div>
       </div>
 
+      {/* Bottom Download Report & Reset Action Bar (Hidden in Print) */}
+      <div className="print:hidden p-6 sm:p-7 bg-white rounded-3xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Download className="w-4 h-4 text-sky-600" /> Save or Print Your Nutrition Report
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Downloads this entire clinical assessment, comparison tables, and meal schedule exactly as shown (with 3D graphics excluded).
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleDownloadReport}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-600 via-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-500/20 transition-all cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" /> Download Report
+          </button>
+          <button
+            type="button"
+            onClick={onReset}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-all cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Recalculate
+          </button>
+        </div>
+      </div>
+
       {/* Trust & Medical Disclaimer */}
-      <div className="p-4 bg-slate-100/80 border border-slate-200 rounded-2xl flex items-start gap-3">
+      <div className="p-4 print:p-3 bg-slate-100/80 border border-slate-200 rounded-2xl flex items-start gap-3 print:mb-0">
         <HelpCircle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
         <p className="text-[11px] text-slate-500 leading-relaxed">
           <strong>Wellness Disclaimer:</strong> {disclaimer}

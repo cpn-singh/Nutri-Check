@@ -223,9 +223,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-sky-100 selection:text-sky-900">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-sky-100 selection:text-sky-900 print:min-h-0 print:h-auto print:bg-white print:block">
       {/* Header Bar */}
-      <header className="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30">
+      <header className="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 print:hidden">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <NutriCheckLogo className="w-10 h-10" />
@@ -251,7 +251,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8 print:p-0 print:m-0 print:max-w-none print:w-full">
         {!assessmentResult ? (
           <div>
             {/* Hero Heading */}
@@ -392,7 +392,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/80 bg-white py-6 mt-12">
+      <footer className="border-t border-slate-200/80 bg-white py-6 mt-12 print:hidden">
         <div className="max-w-4xl mx-auto px-4 text-center text-xs text-slate-500">
           <p className="font-medium text-slate-600">
             NutriCheck Health & Nutrition Platform • Python Django 6 REST + Vite React

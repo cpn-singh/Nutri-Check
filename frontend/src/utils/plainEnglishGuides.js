@@ -54,7 +54,7 @@ export function generateSimpleEnglishSummary(result) {
       yourValue: comp.lean_mass_kg ? `${comp.lean_mass_kg} kg (FFMI ${comp.fat_free_mass_index || '19'})` : 'Healthy baseline',
       idealTarget: isMale ? "Above 45 kg" : "Above 35 kg",
       whatItMeans: "Muscle is living, active tissue. The more lean muscle you keep, the more calories you burn even while sitting or sleeping.",
-      status: "Protected Baseline",
+      status: "Protected",
       tone: "teal"
     },
     {
@@ -89,7 +89,7 @@ export function generateSimpleEnglishSummary(result) {
         : goal === 'build_muscle'
         ? `You will eat ~${Math.abs(targetCals - tdee)} extra calories above your daily burn to give your muscles fuel to grow bigger and stronger.`
         : "You will eat exactly what your body uses each day to maintain your current weight with consistent energy.",
-      status: "Custom Calibrated",
+      status: "Calibrated",
       tone: "teal"
     }
   ];
