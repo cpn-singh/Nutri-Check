@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nutri-check.vercel.app/sitemap.xml
+Sitemap: https://nutri-check-47.vercel.app/sitemap.xml
